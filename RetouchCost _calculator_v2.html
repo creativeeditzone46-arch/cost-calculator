@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Calculator — Creative Edit Zone</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D0F0E;
+    --bg2: #141614;
+    --bg3: #1C1F1C;
+    --card: #181B18;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --teal: #2FD9A0;
+    --teal2: #1FAF7A;
+    --teal-dim: rgba(47,217,160,0.12);
+    --teal-dim2: rgba(47,217,160,0.06);
+    --red: #FF6B6B;
+    --red-dim: rgba(255,107,107,0.1);
+    --amber: #F5A623;
+    --text: #F0F0EE;
+    --text2: #8A8E89;
+    --text3: #555A54;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(47,217,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(47,217,160,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(47,217,160,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 360px 1fr 360px;
+    min-height: 100vh;
+  }
+
+  /* LEFT SIDEBAR */
+  .sidebar {
+    background: rgba(20,22,20,0.97);
+    border-right: 1px solid rgba(47,217,160,0.2);
+    padding: 48px 40px 48px 40px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 2;
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    background: rgba(20,22,20,0.97);
+    border-left: 1px solid rgba(47,217,160,0.2);
+    padding: 48px 32px 48px 36px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 2;
+  }
+
+  .rp-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .rp-logo span { color: var(--teal); }
+
+  .rp-tagline {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--teal2);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .rp-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 22px;
+  }
+
+  .rp-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .rp-service-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .rp-service-item:hover { border-color: rgba(47,217,160,0.25); }
+
+  .rp-service-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .rp-service-desc {
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .rp-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .rp-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--teal);
+    background: var(--teal-dim2);
+    border: 1px solid rgba(47,217,160,0.12);
+    border-radius: 5px;
+    padding: 4px 8px;
+  }
+
+  .rp-contact {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .rp-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .rp-contact-item a {
+    color: var(--text2);
+    text-decoration: none;
+    transition: color 0.2s;
+    word-break: break-all;
+  }
+  .rp-contact-item a:hover { color: var(--teal); }
+  .rp-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .rp-cta {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    padding: 11px 16px;
+    background: transparent;
+    color: var(--teal);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    border: 1px solid rgba(47,217,160,0.4);
+    transition: background 0.2s, color 0.2s;
+  }
+  .rp-cta:hover { background: var(--teal); color: #0D0F0E; }
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.15;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .sidebar-logo span { color: var(--teal); }
+
+  .sidebar-tagline {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--teal2);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 24px;
+  }
+
+  .sidebar-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .service-list {
+    list-style: none;
+    margin-bottom: 28px;
+  }
+  .service-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .service-list li::before {
+    content: '▸';
+    color: var(--teal);
+    font-size: 10px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--teal-dim2);
+    border: 1px solid rgba(47,217,160,0.15);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    color: var(--teal);
+    font-family: var(--mono);
+    margin-bottom: 8px;
+  }
+
+  .contact-block {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text2);
+    word-break: break-all;
+  }
+  .contact-item a {
+    color: var(--text2);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .contact-item a:hover { color: var(--teal); }
+  .contact-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .cta-btn {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--teal);
+    color: #0D0F0E;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .cta-btn:hover { opacity: 0.88; }
+
+  .shell {
+    position: relative;
+    z-index: 1;
+    padding: 48px 40px 64px;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--teal);
+  }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 44px;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  h1 em {
+    color: var(--teal);
+    font-style: italic;
+  }
+  .subtitle {
+    font-size: 15px;
+    color: var(--text2);
+    font-weight: 300;
+  }
+
+  /* Two-column layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--border2); }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Slider rows */
+  .slider-row {
+    margin-bottom: 22px;
+  }
+  .slider-row:last-child { margin-bottom: 0; }
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .slider-name {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 400;
+  }
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--teal);
+    font-weight: 400;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--bg3);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 0 3px rgba(47,217,160,0.2);
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  input[type=range]:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 0 6px rgba(47,217,160,0.15);
+    transform: scale(1.1);
+  }
+
+  /* Price input */
+  .price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--bg3);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .price-label { font-size: 13px; color: var(--text2); }
+  .price-input-wrap { display: flex; align-items: center; gap: 6px; }
+  .price-sign { font-family: var(--mono); font-size: 13px; color: var(--text3); }
+  input[type=number] {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--teal);
+    width: 60px;
+    text-align: right;
+    -moz-appearance: textfield;
+  }
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Result card - full width */
+  .result-card {
+    background: var(--teal-dim2);
+    border: 1px solid rgba(47,217,160,0.25);
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .result-item {
+    padding: 0 24px 0 0;
+    border-right: 1px solid rgba(47,217,160,0.1);
+    margin-right: 24px;
+  }
+  .result-item:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .result-item:first-child { padding-left: 0; }
+  .r-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .r-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .r-val.red { color: var(--red); }
+  .r-val.teal { color: var(--teal); }
+  .r-val.blue { color: #6AABF7; }
+
+  /* Verdict */
+  .verdict {
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .verdict.positive {
+    background: var(--teal-dim);
+    border: 1px solid rgba(47,217,160,0.2);
+  }
+  .verdict.negative {
+    background: var(--red-dim);
+    border: 1px solid rgba(255,107,107,0.2);
+  }
+  .verdict-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .verdict.positive .verdict-icon { background: rgba(47,217,160,0.15); }
+  .verdict.negative .verdict-icon { background: rgba(255,107,107,0.15); }
+  .verdict-text {}
+  .verdict-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+  .verdict.positive .verdict-title { color: var(--teal); }
+  .verdict.negative .verdict-title { color: var(--red); }
+  .verdict-sub { font-size: 14px; color: var(--text); }
+
+  /* Bar chart */
+  .bar-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .bar-row { margin-bottom: 16px; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .bar-name { font-size: 12px; color: var(--text2); }
+  .bar-cost { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+  .bar-track {
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-fill.red { background: var(--red); }
+  .bar-fill.teal { background: var(--teal); }
+
+  /* Yearly highlight */
+  .yearly-card {
+    background: linear-gradient(135deg, rgba(47,217,160,0.08) 0%, rgba(47,217,160,0.02) 100%);
+    border: 1px solid rgba(47,217,160,0.15);
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .yearly-left {}
+  .yearly-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .yearly-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 68px;
+    color: var(--teal);
+    line-height: 1;
+  }
+  .yearly-label { font-size: 14px; color: var(--text); margin-top: 8px; font-weight: 500; }
+  .yearly-right {
+    text-align: right;
+  }
+  .yearly-hours {
+    font-family: 'DM Serif Display', serif;
+    font-size: 52px;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .yearly-hrs-label { font-size: 14px; color: var(--text2); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .footer-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .footer-links {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+  }
+
+  /* Animate in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .shell > * {
+    animation: fadeUp 0.5s ease both;
+  }
+  .shell > *:nth-child(1) { animation-delay: 0.05s; }
+  .shell > *:nth-child(2) { animation-delay: 0.1s; }
+  .shell > *:nth-child(3) { animation-delay: 0.15s; }
+  .shell > *:nth-child(4) { animation-delay: 0.2s; }
+  .shell > *:nth-child(5) { animation-delay: 0.25s; }
+  .shell > *:nth-child(6) { animation-delay: 0.3s; }
+  .shell > *:nth-child(7) { animation-delay: 0.35s; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- LEFT SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><span>Creative</span><br>Edit Zone</div>
+  <div class="sidebar-tagline">Professional Retouching Studio</div>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-section-title">What we do</div>
+  <ul class="service-list">
+    <li>Background Removal &amp; Clipping Path</li>
+    <li>High-End Skin Retouching</li>
+    <li>Color Correction &amp; Grading</li>
+    <li>Product &amp; Jewelry Editing</li>
+    <li>Ghost Mannequin / Neck Joint</li>
+    <li>Real Estate Photo Enhancement</li>
+    <li>E-Commerce &amp; Amazon/Shopify Ready</li>
+    <li>Commercial Post-Production</li>
+  </ul>
+
+  <div class="sidebar-section-title">Why clients trust us</div>
+  <div style="margin-bottom:28px;">
+    <div class="sidebar-badge">✦ 12+ Years Experience</div><br>
+    <div class="sidebar-badge">⚡ 24–48 hr Delivery</div><br>
+    <div class="sidebar-badge">♾ Unlimited Revisions</div><br>
+    <div class="sidebar-badge">🌎 USA-Market Quality</div>
+  </div>
+
+  <div class="contact-block">
+    <div class="sidebar-section-title" style="margin-bottom:12px;">Get in touch</div>
+    <div class="contact-item">
+      <div class="contact-icon">✉</div>
+      <a href="mailto:abirkhansp@gmail.com">abirkhansp@gmail.com</a>
+    </div>
+    <div class="contact-item">
+      <div class="contact-icon">💬</div>
+      <a href="https://wa.me/8801834172059" target="_blank">WhatsApp: +8801834172059</a>
+    </div>
+    <div class="contact-item">
+      <div class="contact-icon">🌐</div>
+      <a href="https://creativeeditzone.com" target="_blank">creativeeditzone.com</a>
+    </div>
+    <a class="cta-btn" href="https://wa.me/8801834172059?text=Hi%20Creative%20Edit%20Zone%2C%20I%27d%20like%20to%20get%20a%20free%20quote%20for%20photo%20retouching." target="_blank">Get a Free Quote →</a>
+  </div>
+</aside>
+
+<!-- RIGHT CONTENT -->
+<div class="shell">
+
+  <div class="header">
+    <div class="eyebrow">Creative Edit Zone — Free Tool</div>
+    <h1>Is outsourcing your<br>retouching <em>worth it?</em></h1>
+    <p class="subtitle">Adjust the sliders and see your real savings instantly.</p>
+  </div>
+
+  <!-- Inputs -->
+  <div class="layout">
+    <div class="card">
+      <div class="card-label">Your operation</div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-name">Images per month</span>
+          <span class="slider-val" id="v-imgs">500</span>
+        </div>
+        <input type="range" id="s-imgs" min="50" max="5000" step="50" value="500">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-name">In-house editor rate ($/hr)</span>
+          <span class="slider-val" id="v-rate">$25</span>
+        </div>
+        <input type="range" id="s-rate" min="10" max="80" step="1" value="25">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-name">Minutes per image (in-house)</span>
+          <span class="slider-val" id="v-mins">8 min</span>
+        </div>
+        <input type="range" id="s-mins" min="3" max="30" step="1" value="8">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Outsource pricing</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px;">
+        Enter what you'd charge per image. Creative Edit Zone typically prices between <span style="color:var(--teal);font-family:var(--mono);">$0.50–$2.00</span> per image depending on complexity.
+      </p>
+      <div class="price-row">
+        <span class="price-label">Your price per image</span>
+        <div class="price-input-wrap">
+          <span class="price-sign">$</span>
+          <input type="number" id="price" value="0.80" min="0.10" max="20" step="0.05">
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 16px;background:var(--teal-dim2);border-radius:10px;border:1px solid rgba(47,217,160,0.1);">
+        <div style="font-size:11px;color:var(--teal2);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Turnaround promise</div>
+        <div style="font-size:13px;color:var(--text2);">24–48 hour delivery · Unlimited revisions · USA-market quality</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics row -->
+  <div class="result-card">
+    <div class="result-item">
+      <div class="r-label">In-house / mo</div>
+      <div class="r-val red" id="m-inhouse">$1,667</div>
+    </div>
+    <div class="result-item">
+      <div class="r-label">Outsource / mo</div>
+      <div class="r-val blue" id="m-outsource">$400</div>
+    </div>
+    <div class="result-item">
+      <div class="r-label">Monthly savings</div>
+      <div class="r-val teal" id="m-saving">$1,267</div>
+    </div>
+    <div class="result-item">
+      <div class="r-label">Hours freed / mo</div>
+      <div class="r-val" id="m-hours">67 hrs</div>
+    </div>
+  </div>
+
+  <!-- Yearly highlight -->
+  <div class="yearly-card" id="yearly-card">
+    <div class="yearly-left">
+      <div class="yearly-eyebrow">Annual savings</div>
+      <div class="yearly-num" id="yearly-num">$15,200</div>
+      <div class="yearly-label" id="yearly-label">saved every year by outsourcing</div>
+    </div>
+    <div class="yearly-right">
+      <div class="yearly-hours" id="yearly-hours">804 hrs</div>
+      <div class="yearly-hrs-label">freed per year<br><span style="color:var(--text3);font-size:12px;">≈ 100 working days</span></div>
+    </div>
+  </div>
+
+  <!-- Verdict -->
+  <div class="verdict positive" id="verdict">
+    <div class="verdict-icon">✦</div>
+    <div class="verdict-text">
+      <div class="verdict-title" id="verdict-title">Outsourcing saves you $15,200 this year</div>
+      <div class="verdict-sub" id="verdict-sub">Every dollar spent on outsourcing returns $3.80 in editor cost savings.</div>
+    </div>
+  </div>
+
+  <!-- Bar chart -->
+  <div class="bar-card">
+    <div class="card-label" style="margin-bottom:16px;">Cost comparison</div>
+    <div class="bar-row">
+      <div class="bar-meta">
+        <span class="bar-name">In-house editor</span>
+        <span class="bar-cost red" id="bl-inhouse">$1,667/mo</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill red" id="b-inhouse" style="width:100%"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-meta">
+        <span class="bar-name">Creative Edit Zone (outsource)</span>
+        <span class="bar-cost" style="color:var(--teal)" id="bl-outsource">$400/mo</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill teal" id="b-outsource" style="width:24%"></div></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">Creative Edit Zone</div>
+    <div class="footer-links">creativeeditzone.com &nbsp;·&nbsp; abirkhansp@gmail.com &nbsp;·&nbsp; WhatsApp +8801834172059</div>
+  </div>
+
+</div>
+
+<!-- RIGHT PANEL: AI Automation -->
+<aside class="right-panel">
+  <div class="rp-logo"><span>AI</span> Automation<br>Services</div>
+  <div class="rp-tagline">by Creative Edit Zone</div>
+
+  <div class="rp-divider"></div>
+
+  <div class="rp-section-title">What we automate</div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">⚡ Cold Email Pipeline</div>
+    <div class="rp-service-desc">Multi-domain outreach with spintax, bounce control, Postmaster monitoring & auto reply-tagging.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">🔍 Lead Scraping Engine</div>
+    <div class="rp-service-desc">Google Maps + LinkedIn + Apollo multi-source scraping, deduplication & enrichment — auto-pushed to sheets.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">🤖 AI Follow-Up Sequences</div>
+    <div class="rp-service-desc">GPT-written personalized follow-ups triggered by open/click/reply events. Stops on positive reply automatically.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">📊 Lead Scoring & CRM Sync</div>
+    <div class="rp-service-desc">AI scores each lead by fit, intent & engagement. Auto-syncs qualified leads to CRM with deal stage mapping.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">📱 LinkedIn Content Bot</div>
+    <div class="rp-service-desc">Sheets-based content calendar → auto-post to LinkedIn with AI-generated captions + Telegram confirmation.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">📩 Job Alert Intelligence</div>
+    <div class="rp-service-desc">Gmail → AI filters job alerts by score → auto-generates tailored cover letters → Telegram notification pipeline.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">🌐 SaaS Workflow Automation</div>
+    <div class="rp-service-desc">Full-stack n8n + Supabase pipelines — user onboarding, billing triggers, usage tracking & webhook integrations.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">📦 Client Delivery Pipeline</div>
+    <div class="rp-service-desc">Order intake → task routing → delivery notification → invoice generation — fully automated end-to-end.</div>
+  </div>
+
+  <div class="rp-service-item">
+    <div class="rp-service-name">📈 Reporting & Analytics Bot</div>
+    <div class="rp-service-desc">Weekly automated reports — campaign stats, reply rates, revenue data — delivered to Telegram or email.</div>
+  </div>
+
+  <div style="margin-top:18px;margin-bottom:8px;">
+    <div class="rp-section-title">Tech stack</div>
+    <div class="rp-stack">
+      <span class="rp-tag">n8n</span>
+      <span class="rp-tag">OpenAI / Claude</span>
+      <span class="rp-tag">ReachInbox</span>
+      <span class="rp-tag">Apollo.io</span>
+      <span class="rp-tag">Google Sheets</span>
+      <span class="rp-tag">Telegram</span>
+      <span class="rp-tag">Supabase</span>
+      <span class="rp-tag">SerpAPI</span>
+      <span class="rp-tag">Gmail API</span>
+      <span class="rp-tag">LinkedIn API</span>
+      <span class="rp-tag">Google Places</span>
+      <span class="rp-tag">Webhook</span>
+      <span class="rp-tag">Postmaster Tools</span>
+      <span class="rp-tag">Vercel</span>
+    </div>
+  </div>
+
+  <div class="rp-contact">
+    <div class="rp-section-title" style="margin-bottom:12px;">Start automating</div>
+    <div class="rp-contact-item">
+      <div class="rp-icon">✉</div>
+      <a href="mailto:abirkhansp@gmail.com">abirkhansp@gmail.com</a>
+    </div>
+    <div class="rp-contact-item">
+      <div class="rp-icon">💬</div>
+      <a href="https://wa.me/8801834172059" target="_blank">WhatsApp: +8801834172059</a>
+    </div>
+    <a class="rp-cta" href="mailto:abirkhansp@gmail.com">Let's Automate Your Business →</a>
+  </div>
+</aside>
+
+</div><!-- end page-wrap -->
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+
+  function calc() {
+    const imgs = +$('s-imgs').value;
+    const rate = +$('s-rate').value;
+    const mins = +$('s-mins').value;
+    const price = parseFloat($('price').value) || 0.80;
+
+    $('v-imgs').textContent = imgs.toLocaleString();
+    $('v-rate').textContent = '$' + rate;
+    $('v-mins').textContent = mins + ' min';
+
+    const inhouse = (imgs * mins / 60) * rate;
+    const outsource = imgs * price;
+    const saving = inhouse - outsource;
+    const hours = Math.round(imgs * mins / 60);
+    const yearly = Math.round(saving * 12);
+    const yearlyHrs = hours * 12;
+    const roi = inhouse > 0 ? (saving / outsource).toFixed(2) : 0;
+
+    $('m-inhouse').textContent = fmt(inhouse);
+    $('m-outsource').textContent = fmt(outsource);
+    $('m-saving').textContent = fmt(Math.abs(saving));
+    $('m-saving').className = 'r-val ' + (saving >= 0 ? 'teal' : 'red');
+    $('m-hours').textContent = hours.toLocaleString() + ' hrs';
+
+    $('yearly-num').textContent = fmt(Math.abs(yearly));
+    $('yearly-hours').textContent = yearlyHrs.toLocaleString() + ' hrs';
+    $('yearly-label').textContent = saving >= 0 ? 'saved every year by outsourcing' : 'extra cost per year';
+
+    $('bl-inhouse').textContent = fmt(inhouse) + '/mo';
+    $('bl-outsource').textContent = fmt(outsource) + '/mo';
+
+    const mx = Math.max(inhouse, outsource, 1);
+    $('b-inhouse').style.width = Math.round((inhouse / mx) * 100) + '%';
+    $('b-outsource').style.width = Math.round((outsource / mx) * 100) + '%';
+
+    const v = $('verdict');
+    if (saving > 0) {
+      v.className = 'verdict positive';
+      $('verdict-title').textContent = `Outsourcing saves you ${fmt(yearly)} this year`;
+      $('verdict-sub').textContent = `Every dollar spent on outsourcing returns $${(saving/outsource).toFixed(1)} in editor cost savings.`;
+    } else {
+      v.className = 'verdict negative';
+      $('verdict-title').textContent = 'Lower your price to unlock savings';
+      $('verdict-sub').textContent = `At current volume, outsourcing costs ${fmt(Math.abs(saving))}/mo more. Increase images or lower price.`;
+    }
+  }
+
+  ['s-imgs','s-rate','s-mins'].forEach(id => $( id).addEventListener('input', calc));
+  $('price').addEventListener('input', calc);
+  calc();
+</script>
+</body>
+</html>
